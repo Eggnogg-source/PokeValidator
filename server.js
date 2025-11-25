@@ -18,6 +18,7 @@ if (process.env.VERCEL_URL) {
   allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
 }
 
+// CORS configuration - allow all origins in production if no specific origins set
 const corsOptions = allowedOrigins.length
   ? {
       origin: (origin, callback) => {
@@ -28,7 +29,10 @@ const corsOptions = allowedOrigins.length
       },
       credentials: true,
     }
-  : undefined;
+  : {
+      origin: true, // Allow all origins when no specific origins configured
+      credentials: true,
+    };
 
 // Ensure we only run the database bootstrap once per runtime (useful for serverless).
 let dbInitPromise;
@@ -63,17 +67,26 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Serve static files from frontend/dist
-app.use(express.static(path.join(__dirname, 'frontend/dist')));
+// Serve static files from frontend/dist (only for non-API routes)
+const staticMiddleware = express.static(path.join(__dirname, 'frontend/dist'));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next(); // Skip static serving for API routes
+  }
+  staticMiddleware(req, res, next);
+});
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
+  if (req.path.startsWith('/api')) {
+    // API route not found - return 404 JSON
+    return res.status(404).json({ message: 'API route not found' });
   }
+  // Serve React app for all other routes
+  res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
 });
 
-// Fallback error handler for consistent JSON responses
+// Fallback error handler for consistent JSON responses (must be last)
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error('API error:', err);
