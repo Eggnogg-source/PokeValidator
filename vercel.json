@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix backend && npm install --prefix frontend",
+  "installCommand": "cd backend && npm install && cd .. && cd frontend && npm install",
   "builds": [
     {
       "src": "backend/server.js",
