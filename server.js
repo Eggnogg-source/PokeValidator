@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
-const { initDatabase } = require('./models/db');
-const quizRoutes = require('./routes/quiz');
-const commentRoutes = require('./routes/comments');
+const { initDatabase } = require('./backend/models/db');
+const quizRoutes = require('./backend/routes/quiz');
+const commentRoutes = require('./backend/routes/comments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,13 +54,23 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Routes
+// API Routes
 app.use('/api/quiz', quizRoutes);
 app.use('/api/comments', commentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Serve static files from frontend/dist
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
+  }
 });
 
 // Fallback error handler for consistent JSON responses
@@ -90,3 +101,4 @@ if (require.main === module) {
 
 module.exports = app;
 module.exports.handler = app;
+

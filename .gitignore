@@ -27,6 +27,7 @@ Thumbs.db
 # Build outputs
 dist/
 **/dist/
+frontend/dist/
 build/
 *.tsbuildinfo
 
