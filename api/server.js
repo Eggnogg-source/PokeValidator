@@ -2,9 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
-const { initDatabase } = require('./backend/models/db');
-const quizRoutes = require('./backend/routes/quiz');
-const commentRoutes = require('./backend/routes/comments');
+const { initDatabase } = require('../backend/models/db');
+const quizRoutes = require('../backend/routes/quiz');
+const commentRoutes = require('../backend/routes/comments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -68,7 +68,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve static files from frontend/dist (only for non-API routes)
-const staticMiddleware = express.static(path.join(__dirname, 'frontend/dist'));
+const staticMiddleware = express.static(path.join(__dirname, '../frontend/dist'));
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
     return next(); // Skip static serving for API routes
@@ -83,7 +83,7 @@ app.get('*', (req, res) => {
     return res.status(404).json({ message: 'API route not found' });
   }
   // Serve React app for all other routes
-  res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 // Fallback error handler for consistent JSON responses (must be last)
