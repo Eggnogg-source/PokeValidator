@@ -1,8 +1,14 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Use POSTGRES_URL (Vercel's default) or fallback to DATABASE_URL
-const connectionString = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL;
+// Support Vercel database with custom prefixes
+// Checks for: POSTGRES_URL (default), STORAGE_URL (if prefix is "STORAGE"), or DATABASE_URL
+const connectionString = 
+  process.env.POSTGRES_URL || 
+  process.env.POSTGRES_URL_NON_POOLING || 
+  process.env.STORAGE_URL || 
+  process.env.STORAGE_URL_NON_POOLING ||
+  process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: connectionString,

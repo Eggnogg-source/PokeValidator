@@ -92,8 +92,15 @@ const seedOnDeploy = async () => {
   }
 };
 
-// Only run if DATABASE_URL or POSTGRES_URL is set
-if (process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL) {
+// Only run if any database URL is set (supports custom prefixes)
+const hasDatabaseUrl = 
+  process.env.POSTGRES_URL || 
+  process.env.POSTGRES_URL_NON_POOLING || 
+  process.env.STORAGE_URL || 
+  process.env.STORAGE_URL_NON_POOLING ||
+  process.env.DATABASE_URL;
+
+if (hasDatabaseUrl) {
   seedOnDeploy();
 } else {
   console.log('No database URL found. Skipping seed.');
