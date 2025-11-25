@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const { initDatabase } = require('./models/db');
 const quizRoutes = require('./routes/quiz');
 const commentRoutes = require('./routes/comments');
@@ -7,8 +8,25 @@ const commentRoutes = require('./routes/comments');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = allowedOrigins.length
+  ? {
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
+      credentials: true,
+    }
+  : undefined;
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes

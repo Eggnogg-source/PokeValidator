@@ -97,13 +97,15 @@ Full Stack App/
 ```bash
 cd backend
 npm install
-cp .env.example .env   # or manually create
+cp env.example .env   # include DB + optional CORS origins
 ```
 
 `.env` needs:
 ```
 DATABASE_URL=postgresql://USERNAME:PASSWORD@localhost:5432/pokemon_quiz
 PORT=5000
+# Comma-separated list (leave blank to allow any origin during local dev)
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://poke-validator.vercel.app
 ```
 
 Initialize DB + seed data:
@@ -117,7 +119,7 @@ npm start               # Starts Express server
 ```bash
 cd frontend
 npm install
-echo "VITE_API_URL=http://localhost:5000/api" > .env
+cp env.example .env
 npm run dev
 ```
 
@@ -140,11 +142,12 @@ Please see `TESTING_GUIDE.md` for a command-by-command walkthrough. Highlights:
 
 ## Environment Variables
 
-| Location   | Variable       | Purpose                              |
-|------------|----------------|--------------------------------------|
-| Backend    | `DATABASE_URL` | PostgreSQL connection string         |
-| Backend    | `PORT`         | Express port (default 5000)          |
-| Frontend   | `VITE_API_URL` | Base URL for API requests            |
+| Location   | Variable                | Purpose                                     |
+|------------|-------------------------|---------------------------------------------|
+| Backend    | `DATABASE_URL`          | PostgreSQL connection string                |
+| Backend    | `PORT`                  | Express port (default 5000)                 |
+| Backend    | `CORS_ALLOWED_ORIGINS`  | Whitelist domains for browser requests      |
+| Frontend   | `VITE_API_URL`          | Base URL for API requests                   |
 
 ## License
 ISC
