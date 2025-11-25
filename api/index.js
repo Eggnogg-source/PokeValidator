@@ -115,5 +115,7 @@ if (require.main === module) {
 }
 
 // Export for Vercel serverless function
+// Vercel expects the handler to be the default export
 module.exports = app;
+module.exports.default = app;
 
