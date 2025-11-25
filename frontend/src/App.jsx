@@ -20,6 +20,7 @@ function App() {
   const [answers, setAnswers] = useState([]);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadQuestions();
@@ -27,16 +28,27 @@ function App() {
 
   const loadQuestions = async () => {
     try {
+      setError(null);
+      setLoading(true);
       const data = await getQuestions();
-      setQuestions(data);
+      if (!data || data.length === 0) {
+        setError('No questions found. The database may not be seeded. Please contact the administrator.');
+      } else {
+        setQuestions(data);
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
+      setError(`Failed to load questions: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleStart = () => {
+    if (questions.length === 0) {
+      setError('Cannot start quiz: No questions available. Please try reloading.');
+      return;
+    }
     setCurrentScreen(SCREENS.QUIZ);
     setCurrentQuestionIndex(0);
     setAnswers([]);
@@ -97,6 +109,58 @@ function App() {
         Loading quiz...
       </div>
     );
+  }
+
+  // Error display component
+  const ErrorDisplay = () => (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#1a1a1a',
+      padding: '20px',
+    }}>
+      <div style={{
+        maxWidth: '600px',
+        backgroundColor: '#2d2d2d',
+        padding: '36px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+        border: '1px solid #404040',
+        textAlign: 'center',
+      }}>
+        <h2 style={{ color: '#ff6b6b', marginBottom: '16px', fontSize: '1.5rem' }}>
+          Error Loading Quiz
+        </h2>
+        <p style={{ color: '#b0b0b0', marginBottom: '24px', lineHeight: '1.6' }}>
+          {error}
+        </p>
+        <button
+          onClick={loadQuestions}
+          style={{
+            padding: '12px 24px',
+            fontSize: '1rem',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
+          onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+
+  // Show error if there's an error or no questions after loading
+  if (error || (!loading && questions.length === 0)) {
+    return <ErrorDisplay />;
   }
 
   return (

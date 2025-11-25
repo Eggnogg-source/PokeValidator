@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
-const { initDatabase } = require('../backend/models/db');
+const { initDatabase, pool, getAllQuestions } = require('../backend/models/db');
 const quizRoutes = require('../backend/routes/quiz');
 const commentRoutes = require('../backend/routes/comments');
 const seedRoute = require('./seed');
+const quizQuestions = require('../backend/seeds/quizData');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -64,9 +65,59 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/seed', seedRoute);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check with database state verification
+app.get('/api/health', async (req, res) => {
+  try {
+    // Basic health check
+    const health = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: false,
+        seeded: false,
+        questionCount: 0
+      }
+    };
+
+    // Check database connection and state
+    try {
+      await ensureDatabaseReady();
+      health.database.connected = true;
+
+      // Check if questions exist
+      const questions = await getAllQuestions();
+      const expectedCount = quizQuestions.length;
+      health.database.questionCount = questions.length;
+      health.database.expectedCount = expectedCount;
+      health.database.seeded = questions.length > 0;
+      health.database.fullySeeded = questions.length === expectedCount;
+
+      if (questions.length === 0) {
+        health.status = 'warning';
+        health.message = 'Database is connected but not seeded. No questions found.';
+      } else if (questions.length < expectedCount) {
+        health.status = 'warning';
+        health.message = `Database is partially seeded. Found ${questions.length} of ${expectedCount} expected questions.`;
+      } else {
+        health.message = `Database is healthy. ${questions.length} question(s) available.`;
+      }
+    } catch (dbError) {
+      health.status = 'error';
+      health.database.connected = false;
+      health.message = `Database connection failed: ${dbError.message}`;
+      health.error = dbError.message;
+    }
+
+    const statusCode = health.status === 'error' ? 503 : health.status === 'warning' ? 200 : 200;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      message: 'Health check failed',
+      error: error.message
+    });
+  }
 });
 
 // Test endpoint to verify routing

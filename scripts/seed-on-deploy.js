@@ -14,7 +14,8 @@ const seedOnDeploy = async () => {
     const count = parseInt(existingQuestions.rows[0].count);
 
     if (count > 0) {
-      console.log(`Database already has ${count} questions. Skipping seed.`);
+      console.log(`✓ Database already has ${count} questions. Skipping seed.`);
+      console.log('✓ Database is ready for use.');
       process.exit(0);
     }
 
@@ -83,11 +84,31 @@ const seedOnDeploy = async () => {
     }
 
     console.log(`Successfully seeded ${insertedCount} questions!`);
+
+    // Verification step: Confirm questions were actually inserted
+    const verificationResult = await pool.query('SELECT COUNT(*) FROM quiz_questions');
+    const verifiedCount = parseInt(verificationResult.rows[0].count);
+    
+    if (verifiedCount === 0) {
+      throw new Error('Verification failed: No questions found in database after seeding');
+    }
+    
+    if (verifiedCount !== insertedCount) {
+      console.warn(`WARNING: Expected ${insertedCount} questions but found ${verifiedCount} in database`);
+    }
+    
+    console.log(`✓ Verification passed: ${verifiedCount} questions confirmed in database`);
+    console.log('✓ Database seeding completed successfully!');
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding database:', error);
-    // Don't fail the build if seeding fails - just log it
-    console.log('Continuing deployment despite seed error...');
+    console.error('\n❌ ERROR SEEDING DATABASE:');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('\n⚠️  WARNING: Database seeding failed during build.');
+    console.error('⚠️  The build will continue, but the database may be empty.');
+    console.error('⚠️  You may need to manually seed the database after deployment.');
+    console.error('⚠️  Use the /api/seed endpoint or run: npm run seed\n');
+    // Exit with 0 to not fail the build, but make the error very visible
     process.exit(0);
   }
 };
@@ -101,9 +122,13 @@ const hasDatabaseUrl =
   process.env.DATABASE_URL;
 
 if (hasDatabaseUrl) {
-  seedOnDeploy();
+  seedOnDeploy().catch((error) => {
+    console.error('Fatal error in seed-on-deploy:', error);
+    process.exit(0); // Don't fail build, but log error
+  });
 } else {
-  console.log('No database URL found. Skipping seed.');
+  console.log('⚠️  No database URL found. Skipping seed.');
+  console.log('⚠️  Database will need to be seeded manually after deployment.');
   process.exit(0);
 }
 
