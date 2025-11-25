@@ -66,7 +66,17 @@ app.use('/api', seedRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint to verify routing
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API routing is working!',
+    path: req.path,
+    url: req.url,
+    method: req.method
+  });
 });
 
 // Serve static files from frontend/dist (only for non-API routes)
