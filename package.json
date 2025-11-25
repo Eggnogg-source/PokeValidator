@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "build": "cd frontend && (npm install --prefer-offline --no-audit || true) && npm run build",
+    "postbuild": "node scripts/seed-on-deploy.js",
     "seed": "node backend/seeds/seedDatabase.js",
     "update-schema": "node backend/scripts/updateSchema.js",
     "test": "echo \"Error: no test specified\" && exit 1"
