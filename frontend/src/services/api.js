@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').trim() || '/api';
+// In production builds, always use relative /api path (Vercel serves API on same domain)
+// This ensures API calls go to the same Vercel deployment, not external URLs
+// For local development, Vite dev server proxies /api to backend
+const API_BASE_URL = import.meta.env.PROD 
+  ? '/api'  // Production: always use relative path on same domain
+  : ((import.meta.env.VITE_API_URL || '').trim() || '/api'); // Dev: use VITE_API_URL if set, else /api (proxied by Vite)
 
 const api = axios.create({
   baseURL: API_BASE_URL,
