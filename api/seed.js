@@ -1,10 +1,12 @@
 const express = require('express');
-const router = express.Router();
 const { pool, initDatabase } = require('../backend/models/db');
 const quizQuestions = require('../backend/seeds/quizData');
 
+const app = express();
+app.use(express.json());
+
 // Secure seed endpoint - requires secret key
-router.post('/', async (req, res) => {
+app.post('/', async (req, res) => {
   try {
     // Check for secret key (set in Vercel environment variables)
     const providedKey = req.headers['x-seed-key'] || req.body.seedKey;
@@ -104,5 +106,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+// Export for Vercel serverless function
+module.exports = app;
 
