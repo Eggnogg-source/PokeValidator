@@ -134,10 +134,13 @@ Please see `TESTING_GUIDE.md` for a command-by-command walkthrough. Highlights:
 5. Manual QA: quiz flow, comment add/delete, results, screenshot.
 
 ## Deployment Notes
-- **Frontend**: `npm run build` → deploy `/frontend/dist` to Vercel/Netlify/etc.
-- **Backend**: Works on Vercel serverless (Express 5 adapter) or any Node host. Remember to configure:
-  - `DATABASE_URL`
-  - Optional: `NODE_ENV=production`
+- **Single Vercel deployment (frontend + backend)**:
+  - `vercel.json` builds the Vite client with `@vercel/static-build` and the Express API through `@vercel/node`.
+  - API requests hit `/api/*` which Vercel rewrites to the backend serverless function; the frontend is served from `/frontend/dist`.
+  - The install step runs `npm install --prefix backend && npm install --prefix frontend`, so no root workspace setup is required.
+  - Provide `DATABASE_URL`, optional `CORS_ALLOWED_ORIGINS`, and any custom `VITE_API_URL`/`VITE_DEV_API_URL` values through the Vercel dashboard.
+- **Local preview**: `npm run dev` inside each package. The Vite dev server now proxies `/api` to `http://localhost:5000` (configurable via `VITE_DEV_API_URL`).
+- **Other hosts**: Backend can still run as a traditional Node server (`node backend/server.js`); frontend build artifacts live under `frontend/dist` after `npm run build`.
 - When using Vercel Postgres/Supabase, update `.env` accordingly and rerun `npm run update-schema && npm run seed`.
 
 ## Environment Variables
@@ -147,7 +150,8 @@ Please see `TESTING_GUIDE.md` for a command-by-command walkthrough. Highlights:
 | Backend    | `DATABASE_URL`          | PostgreSQL connection string                |
 | Backend    | `PORT`                  | Express port (default 5000)                 |
 | Backend    | `CORS_ALLOWED_ORIGINS`  | Whitelist domains for browser requests      |
-| Frontend   | `VITE_API_URL`          | Base URL for API requests                   |
+| Frontend   | `VITE_API_URL`          | Base URL for API requests (prod fallback to `/api`) |
+| Frontend   | `VITE_DEV_API_URL`      | Vite dev-server proxy target (default `http://localhost:5000`) |
 
 ## License
 ISC

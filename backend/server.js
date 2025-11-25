@@ -13,6 +13,10 @@ const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+if (process.env.VERCEL_URL) {
+  allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+}
+
 const corsOptions = allowedOrigins.length
   ? {
       origin: (origin, callback) => {
@@ -25,9 +29,29 @@ const corsOptions = allowedOrigins.length
     }
   : undefined;
 
+// Ensure we only run the database bootstrap once per runtime (useful for serverless).
+let dbInitPromise;
+const ensureDatabaseReady = () => {
+  if (!dbInitPromise) {
+    dbInitPromise = initDatabase().catch((error) => {
+      dbInitPromise = null;
+      throw error;
+    });
+  }
+  return dbInitPromise;
+};
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(async (req, res, next) => {
+  try {
+    await ensureDatabaseReady();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Routes
 app.use('/api/quiz', quizRoutes);
@@ -38,10 +62,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Initialize database and start server
+// Fallback error handler for consistent JSON responses
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('API error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error',
+  });
+});
+
+// Initialize database and start server locally
 const startServer = async () => {
   try {
-    await initDatabase();
+    await ensureDatabaseReady();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
@@ -51,5 +84,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
 
+module.exports = app;
+module.exports.handler = app;
