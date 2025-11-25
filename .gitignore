@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Test files
+*.test.js
+*.spec.js
+**/__tests__/
+**/__mocks__/
+
+# Development scripts (not needed for deployment)
+backend/scripts/check*.js
+
